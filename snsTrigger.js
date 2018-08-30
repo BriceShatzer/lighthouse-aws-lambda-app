@@ -183,7 +183,7 @@ exports.handler = function(event, context, callback) {
         </div>
 
         <div class="input-field">
-            <input type="text" id="featureSwitch" name="url" />
+            <input type="text" id="featureSwitch" name="featureSwitch" />
             <label for="featureSwitch">Feature Switch:</label>
 
         </div>
