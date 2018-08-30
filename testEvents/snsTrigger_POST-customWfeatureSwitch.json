@@ -1,0 +1,52 @@
+{
+  "resource": "/testing-url-endpoint",
+  "path": "/testing-url-endpoint",
+  "httpMethod": "POST",
+  "headers": {
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br",
+    "accept-language": "en-US,en;q=0.9,la;q=0.8",
+    "cache-control": "no-cache",
+    "content-type": "application/x-www-form-urlencoded",
+    "Host": "832m32dkbf.execute-api.us-east-2.amazonaws.com",
+    "origin": "chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop",
+    "postman-token": "2df3013e-51fc-0630-550c-d7af3e76f4c6",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
+    "X-Amzn-Trace-Id": "Root=1-5b7f641c-ed037476baca3258f9e78f5a",
+    "X-Forwarded-For": "12.124.128.222",
+    "X-Forwarded-Port": "443",
+    "X-Forwarded-Proto": "https"
+  },
+  "queryStringParameters": null,
+  "pathParameters": null,
+  "stageVariables": null,
+  "requestContext": {
+    "resourceId": "nvzx7a",
+    "resourcePath": "/testing-url-endpoint",
+    "httpMethod": "POST",
+    "extendedRequestId": "MGyUeHhaiYcF4Xw=",
+    "requestTime": "24/Aug/2018:01:49:16 +0000",
+    "path": "/default/testing-url-endpoint",
+    "accountId": "572049174311",
+    "protocol": "HTTP/1.1",
+    "stage": "default",
+    "requestTimeEpoch": 1535075356625,
+    "requestId": "e8db142f-a73f-11e8-9019-0965dc251c79",
+    "identity": {
+      "cognitoIdentityPoolId": null,
+      "accountId": null,
+      "cognitoIdentityId": null,
+      "caller": null,
+      "sourceIp": "12.124.128.222",
+      "accessKey": null,
+      "cognitoAuthenticationType": null,
+      "cognitoAuthenticationProvider": null,
+      "userArn": null,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36",
+      "user": null
+    },
+    "apiId": "832m32dkbf"
+  },
+  "body": "url=https%3A%2F%2Fgizmodo.com&featureSwitch=eu_disabled%3Don&customTest=true",
+  "isBase64Encoded": false
+}

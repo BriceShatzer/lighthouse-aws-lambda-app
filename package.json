@@ -1,0 +1,15 @@
+{
+  "name": "kinja-perf-lambda",
+  "version": "0.0.1",
+  "description": "Running our lighthouse perf tests as an AWS Lambda function",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Brice Shatzer (bshatzer@kinja.com)",
+  "license": "MIT",
+  "dependencies": {
+    "dogapi": "^2.8.2",
+    "lighthouse-lambda": "^3.1.1"
+  }
+}
