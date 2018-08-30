@@ -33,7 +33,7 @@ exports.handler = (event, context, callback) => {
     });
 
 
-    
+
     /**
      * Controller function responsible for taking the provide target URL (and any provided feature switch),
      * constructing paths to the various different versions of that target URL we would like to test,
@@ -123,7 +123,7 @@ exports.handler = (event, context, callback) => {
                     .then((results) => {
                         console.log('Received results for ' + url +', now logging it with DataDog.');
                         logResults(results.lhr);
-                        
+
                         return chrome.kill().then(() => Promise.resolve());
                     })
                     .catch((error) => {
@@ -234,7 +234,7 @@ exports.handler = (event, context, callback) => {
     /**
      * Uses lighthouse() to collect performance data on the provided url and then store it to dynamoDB
      * @param {string} url - URL to retrieve and print performance data about.
-     * @param {string} timestamp - a UNIX Epoch timestamp used generate a quasi-unique ID value & provide rudimentary datetime sorting
+     * @param {number} timestamp - a UNIX Epoch timestamp used generate a quasi-unique ID value & provide rudimentary datetime sorting
      * @returns {Promise} Promise object indicating if the specified performance data has been retrieved and set to the dynamoDB successfully.
      */
     function testAndStoreInDynamoDB(url, timestamp) {
@@ -247,6 +247,8 @@ exports.handler = (event, context, callback) => {
                 return start()
                     .then((results) => {
                         console.log('Received results for ' + url);
+
+                        let expirationTimestamp = timestamp + 6220800;  // 86400 * 3 || ms in day * # of days
                         let newResultId = timestamp + '-' + url;
                         let auditResults = results.lhr.audits;
                         let metricNames = Object.keys(auditResults);
@@ -263,11 +265,11 @@ exports.handler = (event, context, callback) => {
                         let dataObj = {
                             Item: {
                                 result_id: newResultId,
-                                    data: JSON.stringify(auditsObj)
+                                data: JSON.stringify(auditsObj),
+                                ttl: expirationTimestamp
                             },
                             TableName: 'lighthouse_data'
                         };
-
                         return dynamoDB_documentClient.put(dataObj, function (error, data) {
                             if (error) {
                                 console.log(newResultId + ' - save failed');
@@ -279,7 +281,6 @@ exports.handler = (event, context, callback) => {
                                 return chrome.kill().then(() => Promise.resolve());
                             }
                         });
-
                     })
                     .catch((error) => {
                         console.log('looks like an error occurred');
@@ -295,9 +296,6 @@ exports.handler = (event, context, callback) => {
 
                 return Promise.reject(error);
             });
-
-
-
     }
 
 

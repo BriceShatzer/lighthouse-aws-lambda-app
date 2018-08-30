@@ -6,10 +6,6 @@ AWS.config.region = 'us-east-2';
 
 exports.handler = function(event, context, callback) {
     const sns = new AWS.SNS();
-    //
-    // let urlObj;
-    // let eventParam_url;
-    // let eventParam_featureSwitch;
 
     switch (event.httpMethod) {
         case 'POST':
@@ -32,45 +28,6 @@ exports.handler = function(event, context, callback) {
         case 'GET':
             const apiURL = 'https://' + event.headers.Host + event.requestContext.path;
             getCustomTestPage(apiURL);
-/*
-            callback(null, {
-                statusCode: '200',
-                body: customTestPage(apiURL),
-                headers: {
-                    'Content-Type': 'text/html'
-                }
-            });
-
-*/
-
-            /*
-            let value = getRecentCustomTests();
-            callback(null, {
-                statusCode: '200',
-                //body: apiURL,
-                //body: apiURL,
-                body: value,
-                headers: {
-                    //'Content-Type': 'application/json'
-                    'Content-Type': 'text/plain'
-
-                }
-            });
-            */
-            //context.succeed(customTestPage);
-            // callback(null, {
-            //     statusCode: '200',
-            //     body: customTestPage,
-            //     headers: {
-            //         'Content-Type': 'text/html'
-            //     }
-            // });
-
-            //eventParam_url = event.queryStringParameters.url;
-            //eventParam_featureSwitch = event.queryStringParameters.featureSwitch;
-
-
-
             break;
 
         default:
