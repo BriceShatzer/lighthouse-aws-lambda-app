@@ -61,7 +61,7 @@ exports.handler = (event, context, callback) => {
     function multivariantTestRunner(initObject, testFunctionality){
         const targetURL = initObject.url;
         const featureSwitch = initObject.featureSwitch || '';
-        const timestamp = initObject.timestamp || Date.now();
+        const timestamp = initObject.timestamp || Math.floor(Date.now()/1000);
 
         console.log('in multivariantTestRunner()');
         let testResult = new Promise((resolve,reject) => {
@@ -248,7 +248,7 @@ exports.handler = (event, context, callback) => {
                     .then((results) => {
                         console.log('Received results for ' + url);
 
-                        let expirationTimestamp = timestamp + 6220800;  // 86400 * 3 || ms in day * # of days
+                        let expirationTimestamp = timestamp + 259200;  // 86400 * 3 || seconds in day * # of days
                         let newResultId = timestamp + '-' + url;
                         let auditResults = results.lhr.audits;
                         let metricNames = Object.keys(auditResults);

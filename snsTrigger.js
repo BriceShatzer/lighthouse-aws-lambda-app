@@ -12,7 +12,7 @@ exports.handler = function(event, context, callback) {
             let params = QUERYSTRING.parse(event.body);
             let messageObj = {};
             let urlObj = validateAndParseURL(params);
-            messageObj.timestamp = new Date().getTime();
+            messageObj.timestamp = Math.floor(Date.now()/1000);
             messageObj.url = urlObj.href.split('?')[0];
             messageObj.featureSwitch = urlObj.href.split('?')[1] || '';
             if (params.featureSwitch) {
