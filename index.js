@@ -76,7 +76,7 @@ exports.handler = (event, context, callback) => {
                 testPaths.forEach((testPath) => {
                     let arr = testPath.split('?');
                         arr.splice(1,0,'?');
-                        arr.splice(2,0,featureSwitch);
+                        arr.push(featureSwitch);
                     if (arr.length === 4) {
                         arr.splice(3,0,'&');
                     }
