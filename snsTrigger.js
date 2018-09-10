@@ -141,16 +141,22 @@ exports.handler = function(event, context, callback) {
         };
 
         function generatePageHTML(urlString,arrOfRecentTests) {
-            let pageHTML = `
-<html>
+            let pageHTML = `<html>
 <head>
     <title>Kinja Performance Lighthouse - Custom Test Runner</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
-
     <style type="text/css">
         .header {text-align: center;}
-        #recentTests div {text-align: center;}
+        /* #recentTests {margin-top: 30px;} */
+        .divider {
+            margin-top: 5rem;
+            margin-bottom: 4rem;
+        }
+        #recentTests > div {text-align: center;}
+        #recentTests .collection {
+            margin-top: 2rem;
+        }
         form {
             max-width: 60%;
             min-width: 480px;
@@ -163,9 +169,125 @@ exports.handler = function(event, context, callback) {
         input[type="submit"] {
             align-self: flex-end;
         }
-        tbody td {cursor: pointer;}
-        tr > * + * {padding-left: 15px;}
-        .recent {background-color: #fffbc4;}
+        .collection-item:first-of-type {font-weight: 700;}
+        .collection-item {
+            overflow-y: scroll;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: max-height 800ms ease;
+        }
+        .collection-item {max-height: 100px;}
+        .collection-item.expand {
+            max-height: 800px;
+            flex-flow: column;
+            cursor: default;
+        }
+        .label {display: flex;}
+        .label > .type {
+            width: 36px;
+            text-align: center;
+
+        }
+        .label > .url,
+        .label > .type {
+            padding-left: 15px;
+            box-sizing: content-box;
+
+        }
+        .label > .url {
+            transition: flex-grow 300ms ease;
+        }
+
+        .expand .label > .url {
+            flex-grow: 1;
+        }
+        .collapse-control {
+            height: 0;
+            overflow: hidden;
+            align-self: flex-end;
+            font-size:  2em;
+            cursor: pointer;
+        }
+        .expand .collapse-control{
+            height: auto;
+        }
+
+        .full-audit-to-clipboard {
+            cursor: pointer;
+        }
+
+        .singular-test {
+            display: none;
+            text-align: center;
+            padding:  30px 0;
+            flex: 1 auto;
+            flex-wrap: wrap;
+        }
+        .singular-test div {
+            max-width: 30%;
+            flex: 1 auto;
+        }
+        .singular-test .full-audit-to-clipboard {
+            max-width: 100%;
+            flex: 3 100%;
+            padding-top: 30px;
+            font-weight: 500;
+            opacity: 0.7;
+            transition: opacity 300ms linear;
+        }
+        .singular-test .full-audit-to-clipboard:hover {
+            opacity: 1;
+        }
+        .singular-test .full-audit-to-clipboard span {
+            font-size: 2em;
+            vertical-align: middle;
+        }
+        .expand .singular-test {
+            display: flex;
+            flex-direction: row;
+            flex-flow: row wrap;
+            justify-content: space-between;
+
+        }
+
+        .comparison-test {
+            display: none;
+            margin: 30px 0;
+            font-size: 12px;
+            text-align: center;
+        }
+        .expand .comparison-test {
+            display: table;
+        }
+        .comparison-test td,
+        .comparison-test th {
+            text-align: center;
+        }
+        .comparison-test th {
+            padding-bottom: 5px;
+        }
+        .comparison-test td.full-audit-to-clipboard {
+            font-size:  2em;
+            vertical-align: middle;
+        }
+        .comparison-test td.improved {
+            color:  green;
+        }
+        .comparison-test td.declined {
+            color:  red;
+        }
+        .comparison-test tbody tr:last-of-type {
+            border-bottom: none;
+        }
+        .row-title {
+            width: 25%;
+            font-size:9px;
+            text-align: left;
+        }
+
+        .collection-item.recent {background-color: #fffbc4;}
+        .expand.recent {background-color: transparent;}
 
     </style>
 </head>
@@ -175,7 +297,7 @@ exports.handler = function(event, context, callback) {
     <p>This page will let you perform & retrieve data from custom lighthouse tests</p>
 </section>
 <section class="start-test">
-    <form id="initTest" action=${urlString} method="POST">
+    <form id="initTest" action="${urlString}" method="POST">
         <div class="required input-field">
             <label for="url">URL to Test:</label>
             <input type="text" id="url" name="url" required />
@@ -191,27 +313,26 @@ exports.handler = function(event, context, callback) {
         <input type="submit" class="btn" />
     </form>
 </section>
+<div class="divider"></div>
 <section id="recentTests">
     <div>
         <h4> Recently Completed Tests</h4>
-        <em>Click row to copy test result JSON to Clipboard. </em><br />
-        <em>Tests that match the parameters of the most recent test that you submitted should highlighted.</em>
+        <em>Click a row see more information.</em><br />
+        <em>Tests are kept for 3 days before they expire in the database</em><br />
+        <em>The most recent tests that were initiated from this browser should be highlighted.</em>
     </div>
-    <table class="highlight">
-        <thead>
-        <tr>
-            <th>Timestamp</td>
-            <th>URL</th>
-            </th>
-        <tbody>
-        </tbody>
-        </thead>
-    </table>
-
+    <ul class="collection with-header">
+        <li class="collection-item">
+            <div class="label"> <div>Timestamp</div><div class="type">Type</div><div class="url">URL</div></div>
+        </li>
+    </ul>
 </section>
 
 <script>
-
+    // data injection
+    let arrayOfCustomTests = ${JSON.stringify(arrOfRecentTests)}
+</script>
+<script>
     // Form handler
     var startTestForm = document.getElementById('initTest');
     startTestForm.addEventListener("submit", (e) => {
@@ -228,7 +349,7 @@ exports.handler = function(event, context, callback) {
 
     function ajaxPost (form, callback) {
         let url = form.action,
-                xhr = new XMLHttpRequest();
+            xhr = new XMLHttpRequest();
         let params = [].filter.call(form.elements, (el)=>{
                     return el.type === "text" && el.value.length>0;
     }).map(function(el) {
@@ -260,10 +381,12 @@ exports.handler = function(event, context, callback) {
 </script>
 
 <script>
-    let arrayOfCustomTests = ${JSON.stringify(arrOfRecentTests)};
+    // Test Review Functionality
     console.dir(arrayOfCustomTests);
     const tableOfTests = document.getElementById('recentTests');
-    let lookupObject = {};
+
+    let lookupTable = {};
+    let testCohorts = {};
 
     if (!arrayOfCustomTests.length>0) {
         document.getElementById('recentTests').style.display = 'none';
@@ -277,101 +400,242 @@ exports.handler = function(event, context, callback) {
             return bTimestamp - aTimestamp
         }
 
-        /*
-         arrayOfCustomTests.forEach((customTest)=>{
-         lookupObject[customTest.result_id] = customTest.data;
-         });
-         */
+
+
+
+        //setup methods to make life easier...
+        arrayOfCustomTests.forEach((customTest) => {
+            // create a global lookup table
+            lookupTable[customTest.result_id] = JSON.parse(customTest.data);
+            // group the tests into cohorts based on timestamp/ttl
+            testCohorts[customTest.ttl] = testCohorts[customTest.ttl] || [];
+            testCohorts[customTest.ttl].push(customTest.result_id);
+        });
+
         arrayOfCustomTests.forEach((testResult) => {
-            let timestamp = testResult.result_id.split('-',1)[0];
-        let url = testResult.result_id.replace(timestamp + '-', '');
-        let el = document.createElement('tr');
-        debugger;
-        if (timestamp == recentTestsTimestamp) {
-            el.classList.add('recent');
-        }
-        el.innerHTML = '<td>' + timestamp + '</td><td>' + url + '</td>';
-        el.addEventListener('click', () => {
-            // copy JSON result for test to clipboard
-            let textToCopy = JSON.stringify(testResult);
-        let txt = document.createTextNode(textToCopy);
-        document.body.appendChild(txt);
-        try {
-            if (document.body.createTextRange) {
-                let d = document.body.createTextRange();
-                d.moveToElementText(txt);
-                d.select();
-                document.execCommand('copy');
-            } else {
-                let d = document.createRange();
-                d.selectNodeContents(txt);
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(d);
-                document.execCommand('copy');
-                window.getSelection().removeAllRanges();
+            let cohort = testCohorts[testResult.ttl];
+            let timestamp = testResult.result_id.split('-',2)[0];
+            //let url = //testResult.result_id.replace(timestamp + '-', '');
+            let url = testResult.result_id.split('-',2)[1]
+            let isFeatureSwitchComparisonTest = cohort.length > 3;
+            let companionTestID;
+
+            let el = document.createElement('li');
+            let typeIcon = '&#10686;'
+            el.classList.add('collection-item');
+            if(isFeatureSwitchComparisonTest) {
+                // This test is part of a feature switch test, you must find it's matching variant and tie their data together for a comparison
+                let variant = getVariantType(testResult);
+                companionTestID = cohort.find((cohortMemberID) => {
+                    return variant === getVariantType(cohortMemberID) &&  cohortMemberID !== testResult.result_id
+                });
+                typeIcon = '&#9878;';
+
+
             }
-            txt.remove();
 
-            M.toast({
-                html: 'JSON for ' + url + ' copied successfully',
-                displayLength : 2500
-            });
-        } catch (error) {
-            M.toast({
-                html: 'An error occured while copying the JSON for ' + url,
-                displayLength : 2500
-            });
+            if (timestamp == recentTestsTimestamp) {
+                el.classList.add('recent');
+            }
+            el.innerHTML = '<div class="label">'+
+                            '<div>' + timestamp + '</div>'+
+                            '<div class="type">' + typeIcon + '</div>'+
+                            '<div class="url">' + url + '</div>'+
+                            '<div class="collapse-control">&#8965;</div>'+
+                           '</div>'
+
+
+
+
+            el.addEventListener('click', (e) => {
+                let clickTarget = event.target;
+
+                // collapse item if that is all we're trying to do
+                if (clickTarget.classList.contains('collapse-control')){
+                    el.classList.remove('expand');
+                    return;
+                }
+
+                // copy JSON result for test to clipboard
+                if (clickTarget.classList.contains('full-audit-to-clipboard')) {
+                    if (window.confirm("The full result JSON for tests is really really big. Are you sure you want to copy it to your clipboard?")) {
+                        copyAuditToClipboard(clickTarget.getAttribute('data-result_id'));
+                    }
+                    return
+                }
+
+
+                // build test results data if needed
+                if (!el.classList.contains('built')) {
+                    let perfValues = getBasePerfData(testResult.result_id);
+                    let resultsElement
+                    if (isFeatureSwitchComparisonTest) {
+                        let companionTestData = getBasePerfData(companionTestID);
+                        let companionTestURL  = companionTestID.split('-',2 )[1];
+                        //console.log('isFeatureSwitchComparisonTest = true');
+
+
+                    let table = document.createElement('table');
+                    table.classList.add('comparison-test');
+
+                    let tableHead = document.createElement('thead');
+                    tableHead.innerHTML = '<thead>'+
+                        '<tr>'+
+                            '<th></th>'+
+                            '<th>First Meaningful <br/>Paint (in ms)</th>'+
+                            '<th>Total Page <br/>Weight (in KB)</th>'+
+                            '<th>DOM <br/>node count</th>'+
+                            '<th>Copy result JSON<br/> to Clipboard</th>'+
+                        '</tr>'+
+                    '</thead>';
+
+                    // create primary row
+                    let primaryRow = document.createElement('tr');
+                    primaryRow.innerHTML = _generateRowPartial(url, perfValues) +
+                        '<td class="full-audit-to-clipboard" data-result_id="' + testResult.result_id + '">&#9112;</td>';
+
+                    // create companion row
+                    let companionRow = document.createElement('tr');
+                    companionRow.innerHTML = _generateRowPartial(companionTestURL, companionTestData) +
+                        '<td class="full-audit-to-clipboard" data-result_id="' + companionTestID + '">&#9112;</td>';
+
+                    // create diff row
+                    let diffObj = {
+                        firstMeaningfulPaintValue: perfValues.firstMeaningfulPaintValue - companionTestData.firstMeaningfulPaintValue,
+                        totalByteWeightValue: perfValues.totalByteWeightValue - companionTestData.totalByteWeightValue,
+                        domNodesValue: perfValues.domNodesValue - companionTestData.domNodesValue
+                    }
+
+                    let diffRow = document.createElement('tr');
+                    diffRow.innerHTML = _generateRowPartial('', diffObj) + '<td></td>';
+                    diffRow.querySelectorAll('td').forEach((td)=>{
+                        let className;
+                        if(td.textContent - 0 < 0) {
+                            className = 'improved';
+                        } else if (td.textContent - 0 > 0) {
+                            className = 'declined';
+                        }
+                        td.classList.add(className);
+                    })
+
+                    // create table element
+                    let tableBody = document.createElement('tbody');
+                    tableBody.append(primaryRow);
+                    tableBody.append(companionRow);
+                    tableBody.append(diffRow);
+
+                    table.append(tableHead);
+                    table.append(tableBody);
+
+                    resultsElement = table;
+
+
+
+                    function _generateRowPartial(rowTitle, perfValuesObj){
+                        let str =   '<td class="row-title">' + rowTitle+'</td>'+
+                                    '<td>' + perfValuesObj.firstMeaningfulPaintValue + '</td>'+
+                                    '<td>' + perfValuesObj.totalByteWeightValue + '</td>'+
+                                    '<td>' + perfValuesObj.domNodesValue + '</td>'
+                        return str
+                    }
+
+                } else {
+                    let firstMeaningfulPaintMarkup = '<div> <strong>First Meaningful Paint (in ms)</strong><br/> ' + perfValues.firstMeaningfulPaintValue + '</div>';
+                    let totalByteWeightMarkup = '<div> <strong>Total Page Weigth (in KB)</strong><br/> ' + perfValues.totalByteWeightValue + '</div>';
+                    let domNodesMarkup = '<div> <strong>DOM node count </strong><br/> ' + perfValues.domNodesValue + '</div>';
+
+                    let copyControl = '<div class="full-audit-to-clipboard" data-result_id="' + testResult.result_id + '"> Copy full result JSON to Clipboard <span>&#9112;</span></div>';
+
+                    resultsElement = document.createElement('div');
+                    resultsElement.innerHTML = firstMeaningfulPaintMarkup + totalByteWeightMarkup + domNodesMarkup + copyControl;
+                    resultsElement.classList.add('singular-test');
+                }
+                el.append(resultsElement);
+                el.classList.add('built');
+            }
+
+            // expand the item if we haven't already
+            if (!el.classList.contains('expand')){
+                el.classList.add('expand');
+            }
+
+        });
+
+        //tableOfTests.querySelector('tbody').appendChild(el);
+        tableOfTests.querySelector('.collection').appendChild(el);
+
+
+
+
+
+        // Return the variant using either the "result_id" string or the "testResults" object itself
+        function getVariantType(inputValue){
+            let result_id;
+            if (typeof inputValue === 'object') {
+                result_id = inputValue.result_id;
+            } else if (typeof inputValue === 'string'){
+                result_id = inputValue;
+            }
+            if (result_id.includes('adzone=kinjatest')){
+               return 'adzone=kinjatest';
+            } else if (result_id.includes('no3rdparty')){
+                return 'no3rdparty';
+            } else {
+                return 'base'
+            }
+        }
+
+        // Return an object with the basic perf values we care for a particular test using "result_id"
+        function getBasePerfData(targetID){
+            let obj = {
+                firstMeaningfulPaintValue: Math.floor(_findAudit('first-meaningful-paint').rawValue),
+                totalByteWeightValue: Math.floor(_findAudit('total-byte-weight').displayValue[1]),
+                domNodesValue: Math.floor(_findAudit('dom-size').rawValue)
+            }
+            return obj;
+
+            function _findAudit(id) {
+                return lookupTable[targetID].audits.find((audit) => {
+                    return audit.id === id
+                });
+            }
+        }
+
+        // Copy all the test data to the clipboard for a particular test using "result_id"
+        function copyAuditToClipboard (targetID) {
+            let dataToCopy = lookupTable[targetID];
+            let textToCopy = JSON.stringify(dataToCopy);
+            let txt = document.createTextNode(textToCopy);
+            document.body.appendChild(txt);
+            try {
+                if (document.body.createTextRange) {
+                    let d = document.body.createTextRange();
+                    d.moveToElementText(txt);
+                    d.select();
+                    document.execCommand('copy');
+                } else {
+                    let d = document.createRange();
+                    d.selectNodeContents(txt);
+                    window.getSelection().removeAllRanges();
+                    window.getSelection().addRange(d);
+                    document.execCommand('copy');
+                    window.getSelection().removeAllRanges();
+                }
+                txt.remove();
+
+                M.toast({
+                    html: 'JSON for ' + url + ' copied successfully',
+                    displayLength : 2500
+                });
+            } catch (error) {
+                M.toast({
+                    html: 'An error occured while copying the JSON for ' + url,
+                    displayLength : 2500
+                });
+            }
         }
     });
-
-        tableOfTests.querySelector('tbody').appendChild(el);
-    });
-        /*
-         Object.keys(lookupObject).forEach((key) => {
-         let timestamp = key.split('-',1);
-         let url = key.replace(timestamp + '-', '');
-         let el = document.createElement('tr');
-         if (timestamp == recentTestsTimestamp) {
-         el.classList.add('recent');
-         }
-         el.innerHTML = '<td>' + timestamp + '</td><td>' + url + '</td>';
-         el.addEventListener('click', () => {
-         // copy JSON result for test to clipboard
-         let textToCopy = JSON.stringify(lookupObject[key]);
-         let txt = document.createTextNode(textToCopy);
-         document.body.appendChild(txt);
-         try {
-         if (document.body.createTextRange) {
-         let d = document.body.createTextRange();
-         d.moveToElementText(txt);
-         d.select();
-         document.execCommand('copy');
-         } else {
-         let d = document.createRange();
-         d.selectNodeContents(txt);
-         window.getSelection().removeAllRanges();
-         window.getSelection().addRange(d);
-         document.execCommand('copy');
-         window.getSelection().removeAllRanges();
-         }
-         txt.remove();
-
-         M.toast({
-         html: 'JSON for ' + url + ' copied successfully',
-         displayLength : 2500
-         });
-         } catch (error) {
-         M.toast({
-         html: 'An error occured while copying the JSON for ' + url,
-         displayLength : 2500
-         });
-         }
-         });
-
-         tableOfTests.querySelector('tbody').appendChild(el);
-         });
-         */
-    }
+}
 
 </script>
 </body>
