@@ -285,10 +285,8 @@ exports.handler = function(event, context, callback) {
             font-size:9px;
             text-align: left;
         }
-
         .collection-item.recent {background-color: #fffbc4;}
         .expand.recent {background-color: transparent;}
-
     </style>
 </head>
 <body class="container">
@@ -400,9 +398,6 @@ exports.handler = function(event, context, callback) {
             return bTimestamp - aTimestamp
         }
 
-
-
-
         //setup methods to make life easier...
         arrayOfCustomTests.forEach((customTest) => {
             // create a global lookup table
@@ -414,11 +409,12 @@ exports.handler = function(event, context, callback) {
 
         arrayOfCustomTests.forEach((testResult) => {
             let cohort = testCohorts[testResult.ttl];
-            let timestamp = testResult.result_id.split('-',2)[0];
-            //let url = //testResult.result_id.replace(timestamp + '-', '');
-            let url = testResult.result_id.split('-',2)[1]
+            let timestamp = testResult.result_id.split('-',1)[0];
+            let url = testResult.result_id.replace(timestamp + '-', '');
             let isFeatureSwitchComparisonTest = cohort.length > 3;
+            let isSubordinateTest = false;
             let companionTestID;
+
 
             let el = document.createElement('li');
             let typeIcon = '&#10686;'
@@ -430,143 +426,143 @@ exports.handler = function(event, context, callback) {
                     return variant === getVariantType(cohortMemberID) &&  cohortMemberID !== testResult.result_id
                 });
                 typeIcon = '&#9878;';
-
-
-            }
-
-            if (timestamp == recentTestsTimestamp) {
-                el.classList.add('recent');
-            }
-            el.innerHTML = '<div class="label">'+
-                            '<div>' + timestamp + '</div>'+
-                            '<div class="type">' + typeIcon + '</div>'+
-                            '<div class="url">' + url + '</div>'+
-                            '<div class="collapse-control">&#8965;</div>'+
-                           '</div>'
-
-
-
-
-            el.addEventListener('click', (e) => {
-                let clickTarget = event.target;
-
-                // collapse item if that is all we're trying to do
-                if (clickTarget.classList.contains('collapse-control')){
-                    el.classList.remove('expand');
-                    return;
+                if(companionTestID.length>testResult.result_id.length){
+                   isSubordinateTest = true;
                 }
-
-                // copy JSON result for test to clipboard
-                if (clickTarget.classList.contains('full-audit-to-clipboard')) {
-                    if (window.confirm("The full result JSON for tests is really really big. Are you sure you want to copy it to your clipboard?")) {
-                        copyAuditToClipboard(clickTarget.getAttribute('data-result_id'));
-                    }
-                    return
+            }
+            if(isSubordinateTest){
+                //do nothing because we don't need duplicate test elements in the UI :)
+            } else {
+                if (timestamp == recentTestsTimestamp) {
+                    el.classList.add('recent');
                 }
+                el.innerHTML = '<div class="label">'+
+                                '<div>' + timestamp + '</div>'+
+                                '<div class="type">' + typeIcon + '</div>'+
+                                '<div class="url">' + url + '</div>'+
+                                '<div class="collapse-control">&#8965;</div>'+
+                               '</div>'
 
 
-                // build test results data if needed
-                if (!el.classList.contains('built')) {
-                    let perfValues = getBasePerfData(testResult.result_id);
-                    let resultsElement
-                    if (isFeatureSwitchComparisonTest) {
-                        let companionTestData = getBasePerfData(companionTestID);
-                        let companionTestURL  = companionTestID.split('-',2 )[1];
-                        //console.log('isFeatureSwitchComparisonTest = true');
 
 
-                    let table = document.createElement('table');
-                    table.classList.add('comparison-test');
+                el.addEventListener('click', (e) => {
+                    let clickTarget = event.target;
 
-                    let tableHead = document.createElement('thead');
-                    tableHead.innerHTML = '<thead>'+
-                        '<tr>'+
-                            '<th></th>'+
-                            '<th>First Meaningful <br/>Paint (in ms)</th>'+
-                            '<th>Total Page <br/>Weight (in KB)</th>'+
-                            '<th>DOM <br/>node count</th>'+
-                            '<th>Copy result JSON<br/> to Clipboard</th>'+
-                        '</tr>'+
-                    '</thead>';
-
-                    // create primary row
-                    let primaryRow = document.createElement('tr');
-                    primaryRow.innerHTML = _generateRowPartial(url, perfValues) +
-                        '<td class="full-audit-to-clipboard" data-result_id="' + testResult.result_id + '">&#9112;</td>';
-
-                    // create companion row
-                    let companionRow = document.createElement('tr');
-                    companionRow.innerHTML = _generateRowPartial(companionTestURL, companionTestData) +
-                        '<td class="full-audit-to-clipboard" data-result_id="' + companionTestID + '">&#9112;</td>';
-
-                    // create diff row
-                    let diffObj = {
-                        firstMeaningfulPaintValue: perfValues.firstMeaningfulPaintValue - companionTestData.firstMeaningfulPaintValue,
-                        totalByteWeightValue: perfValues.totalByteWeightValue - companionTestData.totalByteWeightValue,
-                        domNodesValue: perfValues.domNodesValue - companionTestData.domNodesValue
+                    // collapse item if that is all we're trying to do
+                    if (clickTarget.classList.contains('collapse-control')){
+                        el.classList.remove('expand');
+                        return;
                     }
 
-                    let diffRow = document.createElement('tr');
-                    diffRow.innerHTML = _generateRowPartial('', diffObj) + '<td></td>';
-                    diffRow.querySelectorAll('td').forEach((td)=>{
-                        let className;
-                        if(td.textContent - 0 < 0) {
-                            className = 'improved';
-                        } else if (td.textContent - 0 > 0) {
-                            className = 'declined';
+                    // copy JSON result for test to clipboard
+                    if (clickTarget.classList.contains('full-audit-to-clipboard')) {
+                        if (window.confirm("The full result JSON for tests is really really big. Are you sure you want to copy it to your clipboard?")) {
+                            copyAuditToClipboard(clickTarget.getAttribute('data-result_id'));
                         }
-                        td.classList.add(className);
-                    })
-
-                    // create table element
-                    let tableBody = document.createElement('tbody');
-                    tableBody.append(primaryRow);
-                    tableBody.append(companionRow);
-                    tableBody.append(diffRow);
-
-                    table.append(tableHead);
-                    table.append(tableBody);
-
-                    resultsElement = table;
-
-
-
-                    function _generateRowPartial(rowTitle, perfValuesObj){
-                        let str =   '<td class="row-title">' + rowTitle+'</td>'+
-                                    '<td>' + perfValuesObj.firstMeaningfulPaintValue + '</td>'+
-                                    '<td>' + perfValuesObj.totalByteWeightValue + '</td>'+
-                                    '<td>' + perfValuesObj.domNodesValue + '</td>'
-                        return str
+                        return
                     }
 
-                } else {
-                    let firstMeaningfulPaintMarkup = '<div> <strong>First Meaningful Paint (in ms)</strong><br/> ' + perfValues.firstMeaningfulPaintValue + '</div>';
-                    let totalByteWeightMarkup = '<div> <strong>Total Page Weigth (in KB)</strong><br/> ' + perfValues.totalByteWeightValue + '</div>';
-                    let domNodesMarkup = '<div> <strong>DOM node count </strong><br/> ' + perfValues.domNodesValue + '</div>';
 
-                    let copyControl = '<div class="full-audit-to-clipboard" data-result_id="' + testResult.result_id + '"> Copy full result JSON to Clipboard <span>&#9112;</span></div>';
+                    // build test results data if needed
+                    if (!el.classList.contains('built')) {
+                        let perfValues = getBasePerfData(testResult.result_id);
+                        let resultsElement
+                        if (isFeatureSwitchComparisonTest) {
+                            let companionTestData = getBasePerfData(companionTestID);
+                            let companionTestURL  = companionTestID.split('-',2 )[1];
+                            //console.log('isFeatureSwitchComparisonTest = true');
 
-                    resultsElement = document.createElement('div');
-                    resultsElement.innerHTML = firstMeaningfulPaintMarkup + totalByteWeightMarkup + domNodesMarkup + copyControl;
-                    resultsElement.classList.add('singular-test');
-                }
-                el.append(resultsElement);
-                el.classList.add('built');
+
+                            let table = document.createElement('table');
+                            table.classList.add('comparison-test');
+
+                            let tableHead = document.createElement('thead');
+                            tableHead.innerHTML = '<thead>'+
+                                '<tr>'+
+                                    '<th></th>'+
+                                    '<th>First Meaningful <br/>Paint (in ms)</th>'+
+                                    '<th>Total Page <br/>Weight (in KB)</th>'+
+                                    '<th>DOM <br/>node count</th>'+
+                                    '<th>Copy result JSON<br/> to Clipboard</th>'+
+                                '</tr>'+
+                            '</thead>';
+
+                            // create primary row
+                            let primaryRow = document.createElement('tr');
+                            primaryRow.innerHTML = _generateRowPartial(url, perfValues) +
+                                '<td class="full-audit-to-clipboard" data-result_id="' + testResult.result_id + '">&#9112;</td>';
+
+                            // create companion row
+                            let companionRow = document.createElement('tr');
+                            companionRow.innerHTML = _generateRowPartial(companionTestURL, companionTestData) +
+                                '<td class="full-audit-to-clipboard" data-result_id="' + companionTestID + '">&#9112;</td>';
+
+                            // create diff row
+                            let diffObj = {
+                                firstMeaningfulPaintValue: perfValues.firstMeaningfulPaintValue - companionTestData.firstMeaningfulPaintValue,
+                                totalByteWeightValue: perfValues.totalByteWeightValue - companionTestData.totalByteWeightValue,
+                                domNodesValue: perfValues.domNodesValue - companionTestData.domNodesValue
+                            }
+
+                            let diffRow = document.createElement('tr');
+                            diffRow.innerHTML = _generateRowPartial('', diffObj) + '<td></td>';
+                            diffRow.querySelectorAll('td').forEach((td)=>{
+                                let className;
+                                if(td.textContent - 0 < 0) {
+                                    className = 'improved';
+                                } else if (td.textContent - 0 > 0) {
+                                    className = 'declined';
+                                }
+                                td.classList.add(className);
+                            })
+
+                            // create table element
+                            let tableBody = document.createElement('tbody');
+                            tableBody.append(primaryRow);
+                            tableBody.append(companionRow);
+                            tableBody.append(diffRow);
+
+                            table.append(tableHead);
+                            table.append(tableBody);
+
+                            resultsElement = table;
+
+
+
+                            function _generateRowPartial(rowTitle, perfValuesObj){
+                                let str =   '<td class="row-title">' + rowTitle+'</td>'+
+                                            '<td>' + perfValuesObj.firstMeaningfulPaintValue + '</td>'+
+                                            '<td>' + perfValuesObj.totalByteWeightValue + '</td>'+
+                                            '<td>' + perfValuesObj.domNodesValue + '</td>'
+                                return str
+                            }
+
+                        } else {
+                            let firstMeaningfulPaintMarkup = '<div> <strong>First Meaningful Paint (in ms)</strong><br/> ' + perfValues.firstMeaningfulPaintValue + '</div>';
+                            let totalByteWeightMarkup = '<div> <strong>Total Page Weigth (in KB)</strong><br/> ' + perfValues.totalByteWeightValue + '</div>';
+                            let domNodesMarkup = '<div> <strong>DOM node count </strong><br/> ' + perfValues.domNodesValue + '</div>';
+
+                            let copyControl = '<div class="full-audit-to-clipboard" data-result_id="' + testResult.result_id + '"> Copy full result JSON to Clipboard <span>&#9112;</span></div>';
+
+                            resultsElement = document.createElement('div');
+                            resultsElement.innerHTML = firstMeaningfulPaintMarkup + totalByteWeightMarkup + domNodesMarkup + copyControl;
+                            resultsElement.classList.add('singular-test');
+                        }
+                        el.append(resultsElement);
+                        el.classList.add('built');
+                    }
+
+                    // expand the item if we haven't already
+                    if (!el.classList.contains('expand')){
+                        el.classList.add('expand');
+                    }
+                });
+
+                //tableOfTests.querySelector('tbody').appendChild(el);
+                tableOfTests.querySelector('.collection').appendChild(el);
             }
-
-            // expand the item if we haven't already
-            if (!el.classList.contains('expand')){
-                el.classList.add('expand');
-            }
-
         });
-
-        //tableOfTests.querySelector('tbody').appendChild(el);
-        tableOfTests.querySelector('.collection').appendChild(el);
-
-
-
-
 
         // Return the variant using either the "result_id" string or the "testResults" object itself
         function getVariantType(inputValue){
@@ -634,9 +630,7 @@ exports.handler = function(event, context, callback) {
                 });
             }
         }
-    });
-}
-
+    }
 </script>
 </body>
 </html>
