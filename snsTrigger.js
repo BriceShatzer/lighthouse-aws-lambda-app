@@ -365,6 +365,7 @@ exports.handler = function(event, context, callback) {
             let response = JSON.parse(val.currentTarget.response);
             console.log(response);
             document.cookie = 'recentTestsTimestamp='+response.timestamp;
+            startTestForm.reset();
             toastMessage = 'Custom test successfully requested. Please check back here in a few moments for the results. Tests generally take anywhere from 30 - 180 seconds to appear on this page.';
 
         } else {
