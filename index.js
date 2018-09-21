@@ -129,43 +129,14 @@ exports.handler = (event, context, callback) => {
             app_key: dataDogAppKey
         });
 
-
         console.log('in testAndLogWithDatadog()');
         return lighthouse(url, options)
             .then(({ chrome,log,start }) => {
-                // console.log('---');
-                // console.log(lighthouse:default);
-                // console.log('---');
-                // console.log('in lighthouse.then()');
+                console.log('in lighthouse.then()');
                 return start()
                     .then((results) => {
-                        // console.log(chrome);
-/*
-
-
-*/
-                if(!hasRunOnce){
-                    hasRunOnce = true;
-                    let resultValues = results.lhr;
-                    //console.log(Object.keys(resultValues.configSettings));
-
-                    //console.log(resultValues.configSettings.throttling);
-
-
-                    let firstMeaningfulPaintValue = Math.floor(resultValues.audits['first-meaningful-paint'].rawValue);
-                    let totalByteWeightValue = Math.floor(resultValues.audits['total-byte-weight'].displayValue[1]);
-                    let domNodesValue = Math.floor(resultValues.audits['dom-size'].rawValue);
-                    console.log('---');
-                    console.log('URL: '+resultValues.finalUrl);
-                    console.log('FMP: '+firstMeaningfulPaintValue);
-                    console.log('Bytes: '+totalByteWeightValue);
-                    console.log('DomNodes: '+domNodesValue);
-                    console.log('CPU throttle: ' +resultValues.configSettings.throttling.cpuSlowdownMultiplier);
-                    console.log('---');
-                }
-
-                        //console.log('Received results for ' + url +', now logging it with DataDog.');
-                        //logResults(results.lhr);
+                        console.log('Received results for ' + url +', now logging it with DataDog.');
+                        logResults(results.lhr);
 
                         return chrome.kill().then(() => Promise.resolve());
                     })
