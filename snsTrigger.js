@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const URL = require('url');
 const QUERYSTRING = require('querystring');
 const SNStopicARN = 'arn:aws:sns:us-east-2:572049174311:lighthouse-lambda-test-request';
+const authKey = 'Lfh81eOs38'
 AWS.config.region = 'us-east-2';
 
 exports.handler = function(event, context, callback) {
@@ -26,8 +27,18 @@ exports.handler = function(event, context, callback) {
             break;
 
         case 'GET':
-            const apiURL = 'https://' + event.headers.Host + event.requestContext.path;
-            getCustomTestPage(apiURL);
+            if(event.queryStringParameters && event.queryStringParameters.auth === authKey){
+                const apiURL = 'https://' + event.headers.Host + event.requestContext.path;
+                getCustomTestPage(apiURL);
+            } else {
+                callback(null, {
+                    statusCode: '401',
+                    body: 'Invalid request. Please provide a valid "auth" value via query string',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                });
+            }
             break;
 
         default:
