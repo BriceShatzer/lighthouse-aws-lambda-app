@@ -4,22 +4,14 @@ const datadogApi = require('dogapi');
 const URL = require('url');
 
 
-
-//---
-const DEVTOOLS_RTT_ADJUSTMENT_FACTOR = 3.75;
-const DEVTOOLS_THROUGHPUT_ADJUSTMENT_FACTOR = 0.9;
-
-const throttling = {
-    DEVTOOLS_RTT_ADJUSTMENT_FACTOR,
-    DEVTOOLS_THROUGHPUT_ADJUSTMENT_FACTOR,
-    base: {
-        rttMs: 150,
-        throughputKbps: 1.6 * 1024,
-        requestLatencyMs: 150,
-        downloadThroughputKbps: 1.6 * 1024,
-        uploadThroughputKbps: 750,
-        cpuSlowdownMultiplier: 1,
-    }
+const throttlingDefault = {
+// used to overwrite the default throttling behavior that comes out of the box in Lighthouse
+    rttMs: 150,
+    throughputKbps: 1.6 * 1024,
+    requestLatencyMs: 150,
+    downloadThroughputKbps: 1.6 * 1024,
+    uploadThroughputKbps: 750,
+    cpuSlowdownMultiplier: 1,
 }
 
 let hasRunOnce = false;
@@ -27,7 +19,7 @@ let hasRunOnce = false;
 const options = {
     onlyCategories: ['performance'],
     output: 'json',
-    throttling: throttling.base
+    throttling: throttlingDefault
 };
 const dataDogApiKey = '139ba2a32b1934ff3d6b796144ba7f11';
 const dataDogAppKey = 'f2f0a1e5cec259b992e31277dab63fc975c20d09';
