@@ -3,9 +3,31 @@ const AWS = require('aws-sdk');
 const datadogApi = require('dogapi');
 const URL = require('url');
 
+
+
+//---
+const DEVTOOLS_RTT_ADJUSTMENT_FACTOR = 3.75;
+const DEVTOOLS_THROUGHPUT_ADJUSTMENT_FACTOR = 0.9;
+
+const throttling = {
+    DEVTOOLS_RTT_ADJUSTMENT_FACTOR,
+    DEVTOOLS_THROUGHPUT_ADJUSTMENT_FACTOR,
+    base: {
+        rttMs: 150,
+        throughputKbps: 1.6 * 1024,
+        requestLatencyMs: 150,
+        downloadThroughputKbps: 1.6 * 1024,
+        uploadThroughputKbps: 750,
+        cpuSlowdownMultiplier: 1,
+    }
+}
+
+let hasRunOnce = false;
+//---
 const options = {
     onlyCategories: ['performance'],
-    output: 'json'
+    output: 'json',
+    throttling: throttling.base
 };
 const dataDogApiKey = '139ba2a32b1934ff3d6b796144ba7f11';
 const dataDogAppKey = 'f2f0a1e5cec259b992e31277dab63fc975c20d09';
@@ -115,14 +137,43 @@ exports.handler = (event, context, callback) => {
             app_key: dataDogAppKey
         });
 
+
         console.log('in testAndLogWithDatadog()');
         return lighthouse(url, options)
             .then(({ chrome,log,start }) => {
-                console.log('in lighthouse.then()');
+                // console.log('---');
+                // console.log(lighthouse:default);
+                // console.log('---');
+                // console.log('in lighthouse.then()');
                 return start()
                     .then((results) => {
-                        console.log('Received results for ' + url +', now logging it with DataDog.');
-                        logResults(results.lhr);
+                        // console.log(chrome);
+/*
+
+
+*/
+                if(!hasRunOnce){
+                    hasRunOnce = true;
+                    let resultValues = results.lhr;
+                    //console.log(Object.keys(resultValues.configSettings));
+
+                    //console.log(resultValues.configSettings.throttling);
+
+
+                    let firstMeaningfulPaintValue = Math.floor(resultValues.audits['first-meaningful-paint'].rawValue);
+                    let totalByteWeightValue = Math.floor(resultValues.audits['total-byte-weight'].displayValue[1]);
+                    let domNodesValue = Math.floor(resultValues.audits['dom-size'].rawValue);
+                    console.log('---');
+                    console.log('URL: '+resultValues.finalUrl);
+                    console.log('FMP: '+firstMeaningfulPaintValue);
+                    console.log('Bytes: '+totalByteWeightValue);
+                    console.log('DomNodes: '+domNodesValue);
+                    console.log('CPU throttle: ' +resultValues.configSettings.throttling.cpuSlowdownMultiplier);
+                    console.log('---');
+                }
+
+                        //console.log('Received results for ' + url +', now logging it with DataDog.');
+                        //logResults(results.lhr);
 
                         return chrome.kill().then(() => Promise.resolve());
                     })
