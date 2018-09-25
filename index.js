@@ -13,9 +13,6 @@ const throttlingDefault = {
     uploadThroughputKbps: 750,
     cpuSlowdownMultiplier: 1,
 }
-
-let hasRunOnce = false;
-//---
 const options = {
     onlyCategories: ['performance'],
     output: 'json',
