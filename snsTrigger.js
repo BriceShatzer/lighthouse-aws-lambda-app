@@ -487,7 +487,7 @@ exports.handler = function(event, context, callback) {
                         let resultsElement
                         if (isFeatureSwitchComparisonTest && !errorInTest) {
                             let companionTestData = getBasePerfData(companionTestID);
-                            let companionTestURL  = companionTestID.replace(/\d*-/,'');
+                            let companionTestURL  = companionTestID.replace(/[0-9]*-/,'');
                             //console.log('isFeatureSwitchComparisonTest = true');
 
 
