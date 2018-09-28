@@ -27,6 +27,7 @@ exports.handler = function(event, context, callback) {
             break;
 
         case 'GET':
+        console.log(event);
             if(event.queryStringParameters && event.queryStringParameters.auth === authKey){
                 const apiURL = 'https://' + event.headers.Host + event.requestContext.path;
                 getCustomTestPage(apiURL);
@@ -216,13 +217,12 @@ exports.handler = function(event, context, callback) {
         .collapse-control {
             height: 0;
             overflow: hidden;
-            align-self: center;
+            align-self: flex-end;
             font-size:  2em;
             cursor: pointer;
         }
         .expand .collapse-control{
             height: auto;
-            overflow: visible;
         }
 
         .full-audit-to-clipboard {

@@ -27,6 +27,7 @@ exports.handler = function(event, context, callback) {
             break;
 
         case 'GET':
+        console.log(event);
             if(event.queryStringParameters && event.queryStringParameters.auth === authKey){
                 const apiURL = 'https://' + event.headers.Host + event.requestContext.path;
                 getCustomTestPage(apiURL);
@@ -216,13 +217,12 @@ exports.handler = function(event, context, callback) {
         .collapse-control {
             height: 0;
             overflow: hidden;
-            align-self: center;
+            align-self: flex-end;
             font-size:  2em;
             cursor: pointer;
         }
         .expand .collapse-control{
             height: auto;
-            overflow: visible;
         }
 
         .full-audit-to-clipboard {
@@ -427,11 +427,10 @@ exports.handler = function(event, context, callback) {
             let isFeatureSwitchComparisonTest = cohort.length > 3;
             let isSubordinateTest = false;
             let companionTestID;
-            let errorInTest;
 
 
             let el = document.createElement('li');
-            let typeIcon = '&#10686;';
+            let typeIcon = '&#10686;'
             el.classList.add('collection-item');
             if(isFeatureSwitchComparisonTest) {
                 // This test is part of a feature switch test, you must find it's matching variant and tie their data together for a comparison
@@ -440,10 +439,7 @@ exports.handler = function(event, context, callback) {
                     return variant === getVariantType(cohortMemberID) &&  cohortMemberID !== testResult.result_id
                 });
                 typeIcon = '&#9878;';
-                if( !companionTestID || !testResult.result_id ) {
-                    errorInTest = true;
-                    typeIcon = '&#9888;';
-                } else if(companionTestID.length > testResult.result_id.length){
+                if(companionTestID.length>testResult.result_id.length){
                    isSubordinateTest = true;
                 }
             }
@@ -485,9 +481,9 @@ exports.handler = function(event, context, callback) {
                     if (!el.classList.contains('built')) {
                         let perfValues = getBasePerfData(testResult.result_id);
                         let resultsElement
-                        if (isFeatureSwitchComparisonTest && !errorInTest) {
+                        if (isFeatureSwitchComparisonTest) {
                             let companionTestData = getBasePerfData(companionTestID);
-                            let companionTestURL  = companionTestID.replace(/\d*-/,'');
+                            let companionTestURL  = companionTestID.split('-',2 )[1];
                             //console.log('isFeatureSwitchComparisonTest = true');
 
 
