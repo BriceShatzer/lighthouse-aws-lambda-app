@@ -171,7 +171,6 @@ exports.handler = function(event, context, callback) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
     <style type="text/css">
         .header {text-align: center;}
-        /* #recentTests {margin-top: 30px;} */
         .divider {
             margin-top: 5rem;
             margin-bottom: 4rem;
@@ -192,7 +191,6 @@ exports.handler = function(event, context, callback) {
         input[type="submit"] {
             align-self: flex-end;
         }
-        .collection-item:first-of-type {font-weight: 700;}
         .collection-item {
             overflow-y: scroll;
             display: flex;
@@ -206,11 +204,16 @@ exports.handler = function(event, context, callback) {
             flex-flow: column;
             cursor: default;
         }
+        .collection-item {border-left:1px dotted transparent;}
+        .collection-item.shared-timestamp {border-left-color:cyan;}
+        .collection-item.expand .url {font-size: 10px;}
         .label {display: flex;}
-        .label > .type {
-            width: 36px;
+        .label > .timestamp {
+            font-size: 9px;
             text-align: center;
-
+        }
+        .label > .type {
+            text-align: center;
         }
         .label > .url,
         .label > .type {
@@ -274,7 +277,6 @@ exports.handler = function(event, context, callback) {
             justify-content: space-between;
 
         }
-
         .comparison-test {
             display: none;
             margin: 30px 0;
@@ -343,10 +345,7 @@ exports.handler = function(event, context, callback) {
         <em>Tests are kept for 3 days before they expire in the database</em><br />
         <em>The most recent tests that were initiated from this browser should be highlighted.</em>
     </div>
-    <ul class="collection with-header">
-        <li class="collection-item">
-            <div class="label"> <div>Timestamp</div><div class="type">Type</div><div class="url">URL</div></div>
-        </li>
+    <ul class="collection">
     </ul>
 </section>
 
@@ -444,6 +443,7 @@ exports.handler = function(event, context, callback) {
 
 
             let el = document.createElement('li');
+            el.setAttribute('data-timestamp', timestamp);
             let typeIcon = '&#10686;';
             el.classList.add('collection-item');
             if(isFeatureSwitchComparisonTest) {
@@ -467,13 +467,11 @@ exports.handler = function(event, context, callback) {
                     el.classList.add('recent');
                 }
                 el.innerHTML = '<div class="label">'+
-                                '<div>' + timestamp + '</div>'+
+                                '<div class="timestamp">' + timestamp.slice(4) + '</div>'+
                                 '<div class="type">' + typeIcon + '</div>'+
                                 '<div class="url">' + url + '</div>'+
                                 '<div class="collapse-control">&#8965;</div>'+
                                '</div>'
-
-
 
 
                 el.addEventListener('click', (e) => {
@@ -587,9 +585,23 @@ exports.handler = function(event, context, callback) {
                     }
                 });
 
-                //tableOfTests.querySelector('tbody').appendChild(el);
+                el.addEventListener('mouseover', (e) => {
+                    let tests = document.querySelectorAll('li.collection-item');
+                    let timestamp = el.dataset.timestamp;
+
+                    document.querySelectorAll('li.collection-item.shared-timestamp').forEach((oldSharedTimestampElement) => {
+                        oldSharedTimestampElement.classList.remove('shared-timestamp');
+                    });
+
+                    document.querySelectorAll('li.collection-item[data-timestamp="'+timestamp+'"]').forEach((newSharedTimestampElement)=>{
+                        newSharedTimestampElement.classList.add('shared-timestamp');
+                    });
+
+                });
+
                 tableOfTests.querySelector('.collection').appendChild(el);
             }
+
         });
 
         // Return the variant using either the "result_id" string or the "testResults" object itself
