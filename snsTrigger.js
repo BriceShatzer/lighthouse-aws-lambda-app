@@ -139,6 +139,18 @@ exports.handler = function(event, context, callback) {
                     if (data.LastEvaluatedKey) {
                         getTestsAndReturnPage(data.LastEvaluatedKey);
                     } else {
+                        for (let i = recentTests.length - 1; i >= 0; i--){
+                            let dataJSON = JSON.parse(recentTests[i].data);
+                            if(dataJSON.audits){
+                                dataJSON.audits.forEach((audit)=>{
+                                    if(audit.hasOwnProperty('details')){
+                                        delete audit.details;
+                                    }
+                                });
+                                recentTests[i].data = dataJSON;
+                            }
+                        }
+
                         callback(null, {
                             statusCode: '200',
                             body: generatePageHTML(url, recentTests),
@@ -414,7 +426,8 @@ exports.handler = function(event, context, callback) {
         //setup methods to make life easier...
         arrayOfCustomTests.forEach((customTest) => {
             // create a global lookup table
-            lookupTable[customTest.result_id] = JSON.parse(customTest.data);
+            //lookupTable[customTest.result_id] = JSON.parse(customTest.data);
+            lookupTable[customTest.result_id] = customTest.data;
             // group the tests into cohorts based on timestamp/ttl
             testCohorts[customTest.ttl] = testCohorts[customTest.ttl] || [];
             testCohorts[customTest.ttl].push(customTest.result_id);
@@ -544,8 +557,6 @@ exports.handler = function(event, context, callback) {
                             table.append(tableBody);
 
                             resultsElement = table;
-
-
 
                             function _generateRowPartial(rowTitle, perfValuesObj){
                                 let str =   '<td class="row-title">' + rowTitle+'</td>'+
