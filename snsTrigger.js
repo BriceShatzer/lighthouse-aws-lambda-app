@@ -723,7 +723,7 @@ exports.handler = function(event, context, callback) {
             }
         }
     }
-    M.AutoInit();
+    //M.AutoInit(); <-- add back in to use JS powered materialize components
 </script>
 </body>
 </html>
