@@ -206,27 +206,40 @@ exports.handler = function(event, context, callback) {
         }
         .collection-item {border-left:1px dotted transparent;}
         .collection-item.shared-timestamp {border-left-color:cyan;}
-        .collection-item.expand .url {font-size: 10px;}
-        .label {display: flex;}
-        .label > .timestamp {
+        .collection-item.expand .url { font-size: 12px; }
+        .label {
+            display: flex;
+            align-items: center;
+        }
+        .test-info { flex-basis: 75px; }
+        .test-info .type,
+        .test-info .timestamp {
+            float: left;
+        }
+       .test-info .variant,
+        .test-info .timestamp {
             font-size: 9px;
-            text-align: center;
         }
-        .label > .type {
-            text-align: center;
+        .test-info .variant {text-align: center;}
+        .test-info .timestamp {
+            padding-left: 1em;
         }
-        .label > .url,
-        .label > .type {
+        .label .url {
+            position: relative;
+            top: 0;
+            flex: 1;
             padding-left: 15px;
             box-sizing: content-box;
-
+            transition: flex-grow 300ms ease, top 350ms ease;
         }
-        .label > .url {
-            transition: flex-grow 300ms ease;
+        .label .url .tested-feature-switch-string{
+            color: DarkViolet;
         }
-
         .expand .label > .url {
             flex-grow: 1;
+            text-align: center;
+            top: 15px;
+            transition: transition: flex-grow 300ms ease, top 100ms ease;
         }
         .collapse-control {
             height: 0;
@@ -313,6 +326,15 @@ exports.handler = function(event, context, callback) {
         }
         .collection-item.recent {background-color: #fffbc4;}
         .expand.recent {background-color: transparent;}
+        .fixed-action-btn {display: none;}
+        .modal-close {
+            position: absolute;
+            top: 0;
+            right: 0.5em;
+            padding: 0;
+            font-size: 2em;
+            line-height: 1;
+        }
     </style>
 </head>
 <body class="container">
@@ -349,13 +371,29 @@ exports.handler = function(event, context, callback) {
     </ul>
 </section>
 
+<div class="fixed-action-btn">
+  <a class="btn-floating btn-large modal-trigger" href="#moreInfo" data-target="moreInfo">
+    <strong>?</strong>
+  </a>
+</div>
+
+
+  <div id="moreInfo" class="modal">
+    <a class="btn-flat modal-close modal-trigger" href="#!">&#215;</a>
+    <div class="modal-content">
+        This will have some info about reading the table
+
+    </div>
+  </div>
+
+
 <script>
     // data injection
     let arrayOfCustomTests = ${JSON.stringify(arrOfRecentTests)}
 </script>
 <script>
     // Form handler
-    var startTestForm = document.getElementById('initTest');
+    let startTestForm = document.getElementById('initTest');
     startTestForm.addEventListener("submit", (e) => {
         e.preventDefault();
     if (startTestForm.featureSwitch.value.includes('?')) {
@@ -436,6 +474,7 @@ exports.handler = function(event, context, callback) {
             let cohort = testCohorts[testResult.ttl];
             let timestamp = testResult.result_id.split('-',1)[0];
             let url = testResult.result_id.replace(timestamp + '-', '');
+            let urlHtmlString = url;
             let isFeatureSwitchComparisonTest = cohort.length > 3;
             let isSubordinateTest = false;
             let companionTestID;
@@ -444,11 +483,11 @@ exports.handler = function(event, context, callback) {
 
             let el = document.createElement('li');
             el.setAttribute('data-timestamp', timestamp);
-            let typeIcon = '&#10686;';
+            let typeIcon = '&#127919;'
+            let variant = getVariantType(testResult);
             el.classList.add('collection-item');
             if(isFeatureSwitchComparisonTest) {
                 // This test is part of a feature switch test, you must find it's matching variant and tie their data together for a comparison
-                let variant = getVariantType(testResult);
                 companionTestID = cohort.find((cohortMemberID) => {
                     return variant === getVariantType(cohortMemberID) &&  cohortMemberID !== testResult.result_id
                 });
@@ -459,20 +498,33 @@ exports.handler = function(event, context, callback) {
                 } else if(companionTestID.length > testResult.result_id.length){
                    isSubordinateTest = true;
                 }
+
+                //Add highlighting to the urlHtmlString
+                let workingArray = (variant !== 'base') ?
+                    url.split(/(no3rdparty&|adzone=kinjatest&)/) :
+                    url.split(/([?])/);
+
+                workingArray.splice(2,0,'<span class="tested-feature-switch-string">')
+                workingArray.push('</span>');
+                urlHtmlString = workingArray.join('');
             }
+
             if(isSubordinateTest){
                 //do nothing because we don't need duplicate test elements in the UI :)
             } else {
                 if (timestamp == recentTestsTimestamp) {
                     el.classList.add('recent');
                 }
+
                 el.innerHTML = '<div class="label">'+
-                                '<div class="timestamp">' + timestamp.slice(4) + '</div>'+
-                                '<div class="type">' + typeIcon + '</div>'+
-                                '<div class="url">' + url + '</div>'+
+                                    '<div class="test-info">' +
+                                        '<div class="type">' + typeIcon + '</div>'+
+                                        '<div class="timestamp">' + timestamp.slice(4) + '</div>'+
+                                        '<div class="variant">' + variant + '</div>'+
+                                    '</div>' +
+                                    '<div class="url">' + urlHtmlString + '</div>' +
                                 '<div class="collapse-control">&#8965;</div>'+
                                '</div>'
-
 
                 el.addEventListener('click', (e) => {
                     let clickTarget = event.target;
@@ -613,7 +665,7 @@ exports.handler = function(event, context, callback) {
                 result_id = inputValue;
             }
             if (result_id.includes('adzone=kinjatest')){
-               return 'adzone=kinjatest';
+               return 'adzone\=kinjatest';
             } else if (result_id.includes('no3rdparty')){
                 return 'no3rdparty';
             } else {
@@ -671,6 +723,7 @@ exports.handler = function(event, context, callback) {
             }
         }
     }
+    M.AutoInit();
 </script>
 </body>
 </html>
