@@ -162,7 +162,7 @@ exports.handler = (event, context, callback) => {
             } else {
                 const urlObj = URL.parse(url);
                 let firstMeaningfulPaintValue = Math.floor(resultValues.audits['first-meaningful-paint'].rawValue);
-                let totalByteWeightValue = Math.floor(resultValues.audits['total-byte-weight'].displayValue[1]);
+                let totalByteWeightValue = Math.floor(resultValues.audits['total-byte-weight'].rawValue / 1024);
                 let domNodesValue = Math.floor(resultValues.audits['dom-size'].rawValue);
                 /* -- available values on results.audits
                  'first-contentful-paint'
