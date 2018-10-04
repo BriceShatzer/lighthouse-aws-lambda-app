@@ -463,7 +463,6 @@ exports.handler = function(event, context, callback) {
         //setup methods to make life easier...
         arrayOfCustomTests.forEach((customTest) => {
             // create a global lookup table
-            //lookupTable[customTest.result_id] = JSON.parse(customTest.data);
             lookupTable[customTest.result_id] = customTest.data;
             // group the tests into cohorts based on timestamp/ttl
             testCohorts[customTest.ttl] = testCohorts[customTest.ttl] || [];
@@ -665,7 +664,7 @@ exports.handler = function(event, context, callback) {
                 result_id = inputValue;
             }
             if (result_id.includes('adzone=kinjatest')){
-               return 'adzone\=kinjatest';
+               return 'adzone=kinjatest';
             } else if (result_id.includes('no3rdparty')){
                 return 'no3rdparty';
             } else {
@@ -677,7 +676,7 @@ exports.handler = function(event, context, callback) {
         function getBasePerfData(targetID){
             let obj = {
                 firstMeaningfulPaintValue: Math.floor(_findAudit('first-meaningful-paint').rawValue),
-                totalByteWeightValue: Math.floor(_findAudit('total-byte-weight').displayValue[1]),
+                totalByteWeightValue: Math.floor(_findAudit('total-byte-weight').rawValue / 1024),
                 domNodesValue: Math.floor(_findAudit('dom-size').rawValue)
             }
             return obj;
