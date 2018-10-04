@@ -139,6 +139,8 @@ exports.handler = function(event, context, callback) {
                     if (data.LastEvaluatedKey) {
                         getTestsAndReturnPage(data.LastEvaluatedKey);
                     } else {
+                        // Go through the tests and delete the excessively verbose & unused 'details' property from each audit
+                        //to limit the possibility of overrunning the AWS's response size limit for lambdas.
                         for (let i = recentTests.length - 1; i >= 0; i--){
                             let dataJSON = JSON.parse(recentTests[i].data);
                             if(dataJSON.audits){
