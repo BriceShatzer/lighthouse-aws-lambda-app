@@ -27,21 +27,6 @@ exports.handler = function(event, context, callback) {
             break;
 
         case 'GET':
-            // -- "prototype only" redirect logic section which differs from production
-                if(event.queryStringParameters && event.queryStringParameters.noredirect === 'true'){
-                    const apiURL = 'https://' + event.headers.Host + event.requestContext.path;
-                    getCustomTestPage(apiURL);
-                } else {
-                    callback(null, {
-                        statusCode: '301',
-                        headers: {
-                            location: 'https://sxiiyc6p0i.execute-api.us-east-1.amazonaws.com/publish-to-sns?auth=Lfh81eOs38'
-                        },
-                    });
-                }
-
-            // -- end redirect logic section
-
             if(event.queryStringParameters && event.queryStringParameters.auth === authKey){
                 const apiURL = 'https://' + event.headers.Host + event.requestContext.path;
                 getCustomTestPage(apiURL);
@@ -154,8 +139,6 @@ exports.handler = function(event, context, callback) {
                     if (data.LastEvaluatedKey) {
                         getTestsAndReturnPage(data.LastEvaluatedKey);
                     } else {
-                        // Go through the tests and delete the excessively verbose & unused 'details' property from each audit
-                        //to limit the possibility of overrunning the AWS's response size limit for lambdas.
                         for (let i = recentTests.length - 1; i >= 0; i--){
                             let dataJSON = JSON.parse(recentTests[i].data);
                             if(dataJSON.audits){
