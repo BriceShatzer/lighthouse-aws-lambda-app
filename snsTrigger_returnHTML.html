@@ -9,6 +9,7 @@
             margin-top: 5rem;
             margin-bottom: 4rem;
         }
+        .indent {padding-left:1rem;}
         #recentTests > div {text-align: center;}
         #recentTests .collection {
             margin-top: 2rem;
@@ -24,6 +25,14 @@
         input[name="customTest"] {display:none;}
         input[type="submit"] {
             align-self: flex-end;
+        }
+        code {
+            padding: 2px 4px;
+            font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 0.9rem;
+            color: #567482;
+            background-color: #f3f6fa;
+            border-radius: 0.3rem;
         }
         .collection-item {
             overflow-y: scroll;
@@ -160,15 +169,51 @@
         }
         .collection-item.recent {background-color: #fffbc4;}
         .expand.recent {background-color: transparent;}
-        .fixed-action-btn {display: none;}
+        /* .fixed-action-btn {display: none;} */
+        .modal {
+            width: 70%;
+            height:  80%;
+            overflow: hidden;
+        }
+        .modal-content {
+            height: 100%;
+            overflow: scroll;
+        }
         .modal-close {
-            position: absolute;
+            position: fixed;
             top: 0;
             right: 0.5em;
             padding: 0;
             font-size: 2em;
             line-height: 1;
         }
+        .modal section+section{
+            padding-top: 1rem;
+        }
+        .exactly ul li {
+            list-style-type: disc;
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        .example ul,
+        .example ul li{ padding-left:0.5rem;}
+
+        .example .group1 { border-left: solid 2px blue;}
+        .example .group2 { border-left: solid 2px red;}
+        .example .group3 { border-left: solid 2px green;}
+        .group1+.group1,.group2+.group2,.group3+.group3 {
+            padding-bottom: 0.5rem;
+        }
+        .other-questions blockquote {
+            border-left-width: 0;
+            margin-top: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .other-questions > strong {
+            font-size: 16px;
+        }
+
     </style>
 </head>
 <body class="container">
@@ -215,7 +260,103 @@
   <div id="moreInfo" class="modal">
     <a class="btn-flat modal-close modal-trigger" href="#!">&#215;</a>
     <div class="modal-content">
-        This will have some info about reading the table
+        <section>
+        <p align=center><em>Note: Firefox has some issue with this page for some reason, but Edge & Chrome work fine.<br />
+        ...also I haven't tested Safari because nobody should ever use Safari.</em></p>
+        <h5>What is this?</h5>
+        <p>This is a tool which allows you to see what impact a feature switch is having on an individual page's performance. This is done through a <a href="https://docs.google.com/drawings/d/1GWVpjJvXxkx9H-ei5ONbuUC67VD2jgeMivX54cEGbfA/edit?usp=sharing" target="_blank" rel="noopener">custom implementation</a> of the testing tool <a href="https://developers.google.com/web/tools/lighthouse/" taget="_blank" rel="noopener">Lighthouse</a> running in an <a href="https://aws.amazon.com/lambda/" target="_blank" rel="noopener">AWS Lambda</a> instance.</p>
+        </section>
+        <section class="exactly">
+        <h5>What exactly does it test and why? </h5>
+        <p>When you provide a URL & Feature Switch, first the tool runs tests against 3 different versions of the provided URL to establish a performance baseline.<br/>
+        The 3 different versions are:
+        </p>
+        <ul>
+            <li><strong>default</strong> - Most closely matches what users see when coming to the site, but is the most unpredictable do to the variations in the size of ad content & speed of 3rd party services outside of kinja's control.</li>
+            <li><strong>adzone=kinjatest</strong> - Similar to the default version, but removes the variances caused by advertisements by always forcing our static test ads to be used.</li>
+            <li><strong>no3rdparty</strong> - Removes all potential variations by only permitting things that kinja has direct control over to load. Prevents things like calls to 3rd-party services responsible for analytics, ad verification, header bidding, etc. </li>
+        </ul>
+
+
+        <p>
+            It then runs tests against the same 3 different versions of the URL, but this time appends the feature switch to each test.
+        </p>
+        <p>
+            Once all 6 of the tests are completed, the tool matches up each version of the test with it's feature switched counter-part version and compares the results of the meterics:
+        </p>
+        <ul>
+            <li><a href="https://developers.google.com/web/tools/lighthouse/audits/first-meaningful-paint" target="_blank" rel="noopener"><strong>Time to First Meaningful Paint</strong></a> - How long it takes to before the primary content is painted on the page</li>
+            <li><strong>Total Byte Weight</strong> - Total size of the page after everything is loaded </li>
+            <li><a href="https://developers.google.com/web/tools/lighthouse/audits/dom-size" target="_blank" rel="noopener"><strong>DOM Nodes</strong></a> - Total number of nodes (individual parts) that exist on the page. This is used as a proxy to gauge the complexity of the page</li>
+        </ul>
+        </section>
+        <section class="example">
+            <h5>Example Test</h5>
+            <div class="indent">
+                <p><strong>URL: </strong> <code>https://gizmodo.com/</code></p>
+                <p><strong>feature switch: </strong> <code>freepizza=on</code></p>
+                <p>The different URLs tested:</p>
+                <ul class="indent">
+                    <li class="group1">https://gizmodo.com/</li>
+                    <li class="group1">https://gizmodo.com/?freepizza=on</li>
+                    <li class="group2">https://gizmodo.com/?adzone=kinjatest</li>
+                    <li class="group2">https://gizmodo.com/?adzone=kinjatest&freepizza=on</li>
+                    <li class="group3">https://gizmodo.com/?no3rdparty</li>
+                    <li class="group3">https://gizmodo.com/?no3rdparty&freepizza=on</li>
+                </ul>
+                <p>
+                    The <span style="color:blue;">blue</span>, <span style="color:red;">red</span>, & <span style="color:green;">green</span> groups are then compared.
+                </p>
+
+            </div>
+        </section>
+        <section class="other-questions">
+            <h5>Other Questions</h5>
+            <strong>Can I test more then one feature switch at a time?</strong>
+            <blockquote>
+                Sort of. <br/>
+                The test runner will test whatever you provide in the "Feature Switch" field against the baseline values of the 3 different variations. That means in the example above, if you provide the "feature switch" value of <code>freepizza=on&icecream=chocolate</code> then URLs that would be tested would be: <br/>
+                <div class="indent">
+                    https://gizmodo.com/<br/>
+                    https://gizmodo.com/?freepizza=on&icecream=chocolate<br/>
+                    https://gizmodo.com/?adzone=kinjatest&<br/>
+                    https://gizmodo.com/?adzone=kinjatest&freepizza=on&icecream=chocolate<br/>
+                    https://gizmodo.com/?no3rdparty<br/>
+                    https://gizmodo.com/?no3rdparty&freepizza=on&icecream=chocolate<br/>
+                </div>
+            </blockquote>
+
+            <strong>Why are some of the </strong>
+            <strong>I clicked submit and my tests aren't there?</strong>
+            <blockquote>
+                When the page loads, it grabs all of the completed tests from the database, attempts to perform the matching & comparison analysis, and then displays the results on the page. <br/>
+
+                If you have just submitted a test, they generally take anywhere from 30 - 180 seconds to complete before they will be available in the database and if your tests aren't in the database prior to page loading, they will not be displayed. <br /><br />
+
+                Make sure that you have provided the correct "URL to Test". It's best to copy & paste directly from another browser window. Things like using <code>http</code> instead of <code>https</code> or adding or forgetting <code>www</code> can potential cause issues with running your tests. <br /><br />
+
+                If after making sure your fields are correct, having waited some time, and refreshing the page you tests are still not there, reach out to someone on the "Performance" team.
+            </blockquote>
+
+
+            <strong>Why don't tests show more information?</strong>
+            <blockquote>
+                The 3 metrics that are displayed have been picked as a simple way of tracking and understanding performance on our sites. That being said, all of the <a href="https://developers.google.com/web/tools/lighthouse/audits/critical-request-chains" target="_blank" rel="noopener">performance audit data</a> for each individual URL test is available in <a href="https://json.org/" target="_blank" rel="noopener">JSON</a> form. Click on the &#9112; icon under "Copy result JSON to Clipboard", and then paste the text into a editor or a <a href="https://beautifier.io/" target="_blank" rel="noopener">beautifier tool</a> to make it easier to read.<br/><br/>
+
+               Additionally, it is worth noting that Chrome has the Lighthouse tool built into it's included dev tools. This means that you can <a href="https://developers.google.com/web/tools/lighthouse/#devtools" target="_blank" rel="noopener">run tests against individual URLs using your browser.</a> It won't do the work of comparing different URLs, but it does provide significantly more information that our version excludes.
+            </blockquote>
+
+
+            <strong>What do the different icons mean?</strong>
+            <blockquote>
+                &#9878; - Indicates a comparison test and is created when a value is provided in the "Feature Switch" field.<br />
+                &#127919; - Indicates a singular test and is created when a value is not provided in the "Feature Switch" field.<br/>
+                &#9888; - Indicates that a issue has occurred with a test. This is most commonly seen when only half of a comparison test has been completed.<br/>
+                </ul>
+            </blockquote>
+        </section>
+
+
 
     </div>
   </div>
@@ -261,7 +402,7 @@
             console.log(response);
             document.cookie = 'recentTestsTimestamp='+response.timestamp;
             startTestForm.reset();
-            toastMessage = 'Custom test successfully requested. Please check back here in a few moments for the results. Tests generally take anywhere from 30 - 180 seconds to appear on this page.';
+            toastMessage = 'Custom test successfully requested. Please check back here in a few moments for the results. Tests generally take anywhere from 30 - 180 seconds to complete and appear on this page.';
 
         } else {
             toastMessage = 'It looks like an issue occurred while submitting your test request. Try reloading the page and making sure your URL & feature switch fields are valid';
@@ -556,7 +697,7 @@
             }
         }
     }
-    //M.AutoInit(); <-- add back in to use JS powered materialize components
+    M.AutoInit();
 </script>
 </body>
 </html>
