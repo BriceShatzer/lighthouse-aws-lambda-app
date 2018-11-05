@@ -161,9 +161,12 @@ exports.handler = (event, context, callback) => {
                 return false;
             } else {
                 const urlObj = URL.parse(url);
+                let firstContentfulPaintValue = Math.floor(resultValues.audits['first-contentful-paint'].rawValue);
                 let firstMeaningfulPaintValue = Math.floor(resultValues.audits['first-meaningful-paint'].rawValue);
+                let timeToInteractiveValue = Math.floor(resultValues.audits['interactive'].rawValue);
                 let totalByteWeightValue = Math.floor(resultValues.audits['total-byte-weight'].rawValue / 1024);
                 let domNodesValue = Math.floor(resultValues.audits['dom-size'].rawValue);
+
                 /* -- available values on results.audits
                  'first-contentful-paint'
                  'first-meaningful-paint'
@@ -198,7 +201,9 @@ exports.handler = (event, context, callback) => {
                  'dom-size'
                  */
                 let metricsToBeLogged = [
+                    sendMetric('firstContentfulPaint', firstContentfulPaintValue), // First Contentful Paint
                     sendMetric('firstMeaningfulPaint', firstMeaningfulPaintValue), // First Meaningful Paint
+                    sendMetric('timeToInteractive', timeToInteractiveValue), // Time To Interactive (TTI)
                     sendMetric('totalByteWeight', totalByteWeightValue), // Total Byte
                     sendMetric('DOMnodes',domNodesValue) // # of DOM Nodes
                 ];
